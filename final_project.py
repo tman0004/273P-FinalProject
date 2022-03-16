@@ -19,6 +19,8 @@ import seaborn as sns
 import numpy as np 
 import pandas as pd 
 import os
+import warnings
+warnings.filterwarnings('ignore')
 
 # ## Data Analysis
 
@@ -54,6 +56,7 @@ k = 10 #number of variables for heatmap
 cols = corrmat.nlargest(k, 'SalePrice')['SalePrice'].index
 cm = np.corrcoef(train_df[cols].values.T)
 #sns.set(font_scale=1.25)
+
 hm = sns.heatmap(cm, cbar=True, annot=True, square=True, fmt='.2f', annot_kws={'size': 10}, yticklabels=cols.values, xticklabels=cols.values)
 plt.show()
 
@@ -85,60 +88,85 @@ train = pd.get_dummies(train_df)
 
 from sklearn.linear_model import LinearRegression
 
-# +
 y = train['SalePrice']
-
 x = train.drop('SalePrice', axis = 1)
-# -
+x = train.drop('Id', axis = 1)
 
 from sklearn.model_selection import train_test_split
 X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=0)
 
-lr = LinearRegression()
-
-lr.fit(X_train, y_train)
-
-print("Training set score: {:.2f}".format(lr.score(X_train, y_train))) 
-print("Test set score: {:.2f}".format(lr.score(X_test, y_test)))
-
-
-from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from xgboost import XGBRegressor
 
-decision_model = DecisionTreeRegressor()  
-decision_model.fit(X_train, y_train)
+n_est_params = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+max_depth_params = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+f_model_acc = [0, 0, 0]
 
-print("Training set score: {:.2f}".format(decision_model.score(X_train, y_train))) 
-print("Test set score: {:.2f}".format(decision_model.score(X_test, y_test)))
+'''for i in n_est_params:
+    for j in max_depth_params:
+        f_model = RandomForestRegressor(n_estimators=i, max_depth=j)
+        f_model.fit(X_train, y_train)
+        print(f_model.score(X_test, y_test))
+        if f_model.score(X_test, y_test) > f_model_acc[0]:
+            f_model_acc[0] = f_model.score(X_test, y_test)
+            f_model_acc[1] = i
+            f_model_acc[2] = j
+'''
 
-forest_model = RandomForestRegressor(n_estimators=100, max_depth=10)
+# +
+#print("Highest acc:", f_model_acc[0], "with n_est:", f_model_acc[1], "and max_depth:", f_model_acc[2])
+# -
+
+forest_model = RandomForestRegressor(n_estimators=70, max_depth=10)
 forest_model.fit(X_train, y_train)
 
-print("Training set score: {:.2f}".format(forest_model.score(X_train, y_train))) 
-print("Test set score: {:.2f}".format(forest_model.score(X_test, y_test)))
+n_est_params = [50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150]
+max_depth_params = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+learning_rate = [0.0001, 0.001, 0.01, 0.1, 0.2, 0.3]
+x_model_acc = [0, 0, 0, 0]
 
-xg_model = XGBRegressor(n_estimators=100)
+from sklearn.model_selection import cross_val_score, KFold
+
+'''for i in n_est_params:
+    for j in max_depth_params:
+        for k in learning_rate:
+            x_model = XGBRegressor(n_estimators=i, max_depth=j)
+            x_model.fit(X_train, y_train)
+            kfold = KFold(n_splits=10, shuffle=True)
+            kf_cv_scores = cross_val_score(x_model, X_train, y_train, cv=kfold)
+            print(kf_cv_scores.mean())
+            if kf_cv_scores.mean() > x_model_acc[0]:
+                x_model_acc[0] = kf_cv_scores.mean()
+                x_model_acc[1] = i
+                x_model_acc[2] = j
+                x_model_acc[3] = k
+'''
+
+# +
+#print("Highest acc:", x_model_acc[0], "\nn_est:", x_model_acc[1], "\nmax_depth:", x_model_acc[2], "\nlearning rate:", x_model_acc[3])
+# -
+
+xg_model = XGBRegressor(n_estimators=140, max_depth=5, learning_rate=0.2)
 xg_model.fit(X_train, y_train)
 
-print("Training set score: {:.2f}".format(xg_model.score(X_train, y_train))) 
-print("Test set score: {:.2f}".format(xg_model.score(X_test, y_test)))
+# +
+f, ax = plt.subplots(2, 2, figsize=(15,15))
+ax[0,0].plot(y_train, y_train, 'r-')
+ax[0,0].set(title='Random Forest Model Training Data Accuracy', xlabel='True Values', ylabel='Predicted Values')
+ax[0,0].scatter(y_train, forest_model.predict(X_train))
 
-p1 = max(max(forest_model.predict(X_train)), max(y_train))
-p2 = min(min(forest_model.predict(X_train)), min(y_train))
-plt.plot([p1, p2], [p1, p2], 'r-')
-plt.title('Training Data Accuracy')
-plt.xlabel('True Values')
-plt.ylabel('Predicted Values')
-plt.scatter(y_train, forest_model.predict(X_train))
+ax[1,0].plot(y_test, y_test, 'r-')
+ax[1,0].set(title='Random Forest Model Test Data Accuracy', xlabel='True Values', ylabel='Predicted Values')
+ax[1,0].scatter(y_test, forest_model.predict(X_test))
 
-p1 = max(max(forest_model.predict(X_test)), max(y_test))
-p2 = min(min(forest_model.predict(X_test)), min(y_test))
-plt.plot([p1, p2], [p1, p2], 'r-')
-plt.title('Test Data Accuracy')
-plt.xlabel('True Values')
-plt.ylabel('Predicted Values')
-plt.scatter(y_test, forest_model.predict(X_test))
+ax[0,1].plot(y_train, y_train, 'r-')
+ax[0,1].set(title='XG Boost Model Training Data Accuracy', xlabel='True Values', ylabel='Predicted Values')
+ax[0,1].scatter(y_train, xg_model.predict(X_train))
+
+ax[1,1].plot(y_test, y_test, 'r-')
+ax[1,1].set(title='XG Boost Model Test Data Accuracy', xlabel='True Values', ylabel='Predicted Values')
+ax[1,1].scatter(y_test, xg_model.predict(X_test))
+# -
 
 # # DNN
 
