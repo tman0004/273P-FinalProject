@@ -55,11 +55,17 @@ sns.heatmap(corrmat, vmax=.8, square=True);
 k = 10 #number of variables for heatmap
 cols = corrmat.nlargest(k, 'SalePrice')['SalePrice'].index
 cm = np.corrcoef(train_df[cols].values.T)
-sns.set(font_scale=1.25)
+#sns.set(font_scale=1.25)
+
 hm = sns.heatmap(cm, cbar=True, annot=True, square=True, fmt='.2f', annot_kws={'size': 10}, yticklabels=cols.values, xticklabels=cols.values)
 plt.show()
 
 # Correlation between top 10 most correlated features with respect to SalePrice
+
+sns.set()
+cols = ['SalePrice', 'OverallQual', 'GrLivArea', 'GarageCars', 'TotalBsmtSF', 'FullBath', 'YearBuilt']
+sns.pairplot(train_df[cols], height = 2.5)
+plt.show();
 
 # ## Data Processing
 
@@ -161,5 +167,55 @@ ax[1,1].plot(y_test, y_test, 'r-')
 ax[1,1].set(title='XG Boost Model Test Data Accuracy', xlabel='True Values', ylabel='Predicted Values')
 ax[1,1].scatter(y_test, xg_model.predict(X_test))
 # -
+
+# # DNN
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Activation
+from tensorflow.keras.optimizers import Adam
+from keras.callbacks import EarlyStopping 
+
+
+# +
+model = Sequential()
+
+model = Sequential()
+model.add(Dense(100, input_dim=X_train.shape[1], activation='relu'))
+model.add(Dense(100, activation='relu'))
+model.add(Dense(100, activation='relu'))
+model.add(Dense(100, activation='relu'))
+model.add(Dense(100, activation='relu'))
+model.add(Dense(100, activation='relu'))
+model.add(Dense(100, activation='relu'))
+model.add(Dense(1))
+# Compile model
+model.compile(optimizer=Adam(learning_rate=0.001), loss = 'mse')
+# -
+
+early_stop = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=10)
+history = model.fit(x=X_train,y=y_train,
+          validation_split=0.1,
+          batch_size=128,epochs=400)
+
+
+losses = pd.DataFrame(model.history.history)
+losses.plot()
+
+model.summary()
+
+loss_df = pd.DataFrame(model.history.history)
+loss_df.plot(figsize=(12,8))
+
+y_pred = model.predict(X_test)
+from sklearn import metrics
+print('MAE:', metrics.mean_absolute_error(y_test, y_pred))  
+print('MSE:', metrics.mean_squared_error(y_test, y_pred))  
+print('RMSE:', np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
+print('VarScore:',metrics.explained_variance_score(y_test,y_pred))
+# Visualizing Our predictions
+fig = plt.figure(figsize=(10,5))
+plt.scatter(y_test,y_pred)
+# Perfect predictions
+plt.plot(y_test,y_test,'r')
 
 
