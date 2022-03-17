@@ -84,19 +84,18 @@ train = pd.get_dummies(train_df)
 
 # Converting categorical data to numerical data
 
-# ## Trying Base Models
+# ## Model Exploration
 
-from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from xgboost import XGBRegressor
+from sklearn.model_selection import cross_val_score, KFold
 
 y = train['SalePrice']
 x = train.drop('SalePrice', axis = 1)
 x = train.drop('Id', axis = 1)
 
-from sklearn.model_selection import train_test_split
 X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=0)
-
-from sklearn.ensemble import RandomForestRegressor
-from xgboost import XGBRegressor
 
 n_est_params = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 max_depth_params = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
@@ -125,8 +124,6 @@ max_depth_params = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 learning_rate = [0.0001, 0.001, 0.01, 0.1, 0.2, 0.3]
 x_model_acc = [0, 0, 0, 0]
 
-from sklearn.model_selection import cross_val_score, KFold
-
 '''for i in n_est_params:
     for j in max_depth_params:
         for k in learning_rate:
@@ -148,27 +145,6 @@ from sklearn.model_selection import cross_val_score, KFold
 
 xg_model = XGBRegressor(n_estimators=140, max_depth=5, learning_rate=0.2)
 xg_model.fit(X_train, y_train)
-
-# +
-f, ax = plt.subplots(2, 2, figsize=(15,15))
-ax[0,0].plot(y_train, y_train, 'r-')
-ax[0,0].set(title='Random Forest Model Training Data Accuracy', xlabel='True Values', ylabel='Predicted Values')
-ax[0,0].scatter(y_train, forest_model.predict(X_train))
-
-ax[1,0].plot(y_test, y_test, 'r-')
-ax[1,0].set(title='Random Forest Model Test Data Accuracy', xlabel='True Values', ylabel='Predicted Values')
-ax[1,0].scatter(y_test, forest_model.predict(X_test))
-
-ax[0,1].plot(y_train, y_train, 'r-')
-ax[0,1].set(title='XG Boost Model Training Data Accuracy', xlabel='True Values', ylabel='Predicted Values')
-ax[0,1].scatter(y_train, xg_model.predict(X_train))
-
-ax[1,1].plot(y_test, y_test, 'r-')
-ax[1,1].set(title='XG Boost Model Test Data Accuracy', xlabel='True Values', ylabel='Predicted Values')
-ax[1,1].scatter(y_test, xg_model.predict(X_test))
-# -
-
-# # DNN
 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Activation
@@ -203,19 +179,54 @@ losses.plot()
 
 model.summary()
 
-loss_df = pd.DataFrame(model.history.history)
-loss_df.plot(figsize=(12,8))
+# +
+f, ax = plt.subplots(2, 3, figsize=(20,15))
+ax[0,0].plot(y_train, y_train, 'r-')
+ax[0,0].set(title='Random Forest Model Training Data Accuracy', xlabel='True Values', ylabel='Predicted Values')
+ax[0,0].scatter(y_train, forest_model.predict(X_train))
 
-y_pred = model.predict(X_test)
+ax[1,0].plot(y_test, y_test, 'r-')
+ax[1,0].set(title='Random Forest Model Test Data Accuracy', xlabel='True Values', ylabel='Predicted Values')
+ax[1,0].scatter(y_test, forest_model.predict(X_test))
+
+ax[0,1].plot(y_train, y_train, 'r-')
+ax[0,1].set(title='XG Boost Model Training Data Accuracy', xlabel='True Values', ylabel='Predicted Values')
+ax[0,1].scatter(y_train, xg_model.predict(X_train))
+
+ax[1,1].plot(y_test, y_test, 'r-')
+ax[1,1].set(title='XG Boost Model Test Data Accuracy', xlabel='True Values', ylabel='Predicted Values')
+ax[1,1].scatter(y_test, xg_model.predict(X_test))
+
+ax[0,2].plot(y_train, y_train, 'r-')
+ax[0,2].set(title='DNN Model Training Data Accuracy', xlabel='True Values', ylabel='Predicted Values')
+ax[0,2].scatter(y_train, model.predict(X_train))
+
+ax[1,2].plot(y_test, y_test, 'r-')
+ax[1,2].set(title='DNN Model Test Data Accuracy', xlabel='True Values', ylabel='Predicted Values')
+ax[1,2].scatter(y_test, model.predict(X_test))
+
+# +
+y_pred_forest = forest_model.predict(X_test)
+y_pred_xg = xg_model.predict(X_test)
+y_pred_dnn = model.predict(X_test)
 from sklearn import metrics
-print('MAE:', metrics.mean_absolute_error(y_test, y_pred))  
-print('MSE:', metrics.mean_squared_error(y_test, y_pred))  
-print('RMSE:', np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
-print('VarScore:',metrics.explained_variance_score(y_test,y_pred))
-# Visualizing Our predictions
-fig = plt.figure(figsize=(10,5))
-plt.scatter(y_test,y_pred)
-# Perfect predictions
-plt.plot(y_test,y_test,'r')
+print('Random Forest Model Metrics')
+print('MAE:', metrics.mean_absolute_error(y_test, y_pred_forest))  
+print('MSE:', metrics.mean_squared_error(y_test, y_pred_forest))  
+print('RMSE:', np.sqrt(metrics.mean_squared_error(y_test, y_pred_forest)))
+print('VarScore:',metrics.explained_variance_score(y_test,y_pred_forest), '\n')
+
+print('XG Boost Model Metrics')
+print('MAE:', metrics.mean_absolute_error(y_test, y_pred_xg))  
+print('MSE:', metrics.mean_squared_error(y_test, y_pred_xg))  
+print('RMSE:', np.sqrt(metrics.mean_squared_error(y_test, y_pred_xg)))
+print('VarScore:',metrics.explained_variance_score(y_test,y_pred_xg), '\n')
+
+print('Deep Neural Network Model Metrics')
+print('MAE:', metrics.mean_absolute_error(y_test, y_pred_dnn))  
+print('MSE:', metrics.mean_squared_error(y_test, y_pred_dnn))  
+print('RMSE:', np.sqrt(metrics.mean_squared_error(y_test, y_pred_dnn)))
+print('VarScore:',metrics.explained_variance_score(y_test,y_pred_dnn))
+# -
 
 
