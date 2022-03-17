@@ -29,15 +29,25 @@ test_df = pd.read_csv('data/test.csv')
 
 train_df.info()
 
+# ### Example of what an object datatype looks like
+
+train_df.loc[:, 'LotShape']
+
+# ### SalePrice vs GrLivArea scatter plot
+
 data = pd.concat([train_df['SalePrice'], train_df['GrLivArea']], axis=1)
 data.plot.scatter(x='GrLivArea', y='SalePrice', ylim=(0,900000));
 
 # Positive correlation between SalePrice and livng area square footage
 
+# ### SalePrice vs YearBuilt scatter plot
+
 data = pd.concat([train_df['SalePrice'], train_df['YearBuilt']], axis=1)
 data.plot.scatter(x='YearBuilt', y='SalePrice');
 
 # Exponential like correlation between SalePrice and YearBuilt
+
+# ### SalePrice vs OverallQual boxplot
 
 data = pd.concat([train_df['SalePrice'], train_df['OverallQual']], axis=1)
 f, ax = plt.subplots(figsize=(8, 6))
@@ -46,11 +56,15 @@ fig.axis(ymin=0, ymax=800000);
 
 # Positive correlation between SalePrice and OverallQual
 
+# ### Correlation Heatmap between every feature
+
 corrmat = train_df.corr()
 f, ax = plt.subplots(figsize=(12, 9))
 sns.heatmap(corrmat, vmax=.8, square=True);
 
-# Corrleation between features
+# Correlation between features
+
+# ### Correlation between top 10 most correlated features with respect to SalePrice
 
 k = 10 #number of variables for heatmap
 cols = corrmat.nlargest(k, 'SalePrice')['SalePrice'].index
@@ -59,13 +73,6 @@ cm = np.corrcoef(train_df[cols].values.T)
 
 hm = sns.heatmap(cm, cbar=True, annot=True, square=True, fmt='.2f', annot_kws={'size': 10}, yticklabels=cols.values, xticklabels=cols.values)
 plt.show()
-
-# Correlation between top 10 most correlated features with respect to SalePrice
-
-sns.set()
-cols = ['SalePrice', 'OverallQual', 'GrLivArea', 'GarageCars', 'TotalBsmtSF', 'FullBath', 'YearBuilt']
-sns.pairplot(train_df[cols], height = 2.5)
-plt.show();
 
 # ## Data Processing
 
@@ -179,6 +186,10 @@ losses.plot()
 
 model.summary()
 
+# ## Results
+
+# ### Predicted Values vs True Values for all models
+
 # +
 f, ax = plt.subplots(2, 3, figsize=(20,15))
 ax[0,0].plot(y_train, y_train, 'r-')
@@ -204,6 +215,9 @@ ax[0,2].scatter(y_train, model.predict(X_train))
 ax[1,2].plot(y_test, y_test, 'r-')
 ax[1,2].set(title='DNN Model Test Data Accuracy', xlabel='True Values', ylabel='Predicted Values')
 ax[1,2].scatter(y_test, model.predict(X_test))
+# -
+
+# ### Prediciton metrics for all models
 
 # +
 y_pred_forest = forest_model.predict(X_test)
@@ -227,6 +241,3 @@ print('MAE:', metrics.mean_absolute_error(y_test, y_pred_dnn))
 print('MSE:', metrics.mean_squared_error(y_test, y_pred_dnn))  
 print('RMSE:', np.sqrt(metrics.mean_squared_error(y_test, y_pred_dnn)))
 print('VarScore:',metrics.explained_variance_score(y_test,y_pred_dnn))
-# -
-
-
