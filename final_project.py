@@ -12,6 +12,8 @@
 #     name: python3
 # ---
 
+# # House Price Prediction
+
 # ## Importing Libraries
 
 import matplotlib.pyplot as plt
@@ -111,6 +113,10 @@ x = train.drop('Id', axis = 1)
 
 X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=0)
 
+# ### Random Forest Regressor Model
+
+# Hyperparameter tuning
+
 n_est_params = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 max_depth_params = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 f_model_acc = [0, 0, 0]
@@ -130,18 +136,24 @@ f_model_acc = [0, 0, 0]
 #print("Highest acc:", f_model_acc[0], "with n_est:", f_model_acc[1], "and max_depth:", f_model_acc[2])
 # -
 
+# Final Random Forest Model
+
 forest_model = RandomForestRegressor(n_estimators=50, max_depth=11)
 forest_model.fit(X_train, y_train)
 
+# ### XG Boost Regressor Model
+
+# Hyperparameter tuning
+
 n_est_params = [50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150]
 max_depth_params = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-learning_rate = [0.0001, 0.001, 0.01, 0.1, 0.2, 0.3]
+learning_rate = [0.01, 0.1, 0.2, 0.3]
 x_model_acc = [0, 0, 0, 0]
 
 '''for i in n_est_params:
     for j in max_depth_params:
         for k in learning_rate:
-            x_model = XGBRegressor(n_estimators=i, max_depth=j)
+            x_model = XGBRegressor(n_estimators=i, max_depth=j, learning_rate=k)
             x_model.fit(X_train, y_train)
             kfold = KFold(n_splits=10, shuffle=True)
             kf_cv_scores = cross_val_score(x_model, X_train, y_train, cv=kfold)
@@ -157,8 +169,12 @@ x_model_acc = [0, 0, 0, 0]
 #print("Highest acc:", x_model_acc[0], "\nn_est:", x_model_acc[1], "\nmax_depth:", x_model_acc[2], "\nlearning rate:", x_model_acc[3])
 # -
 
-xg_model = XGBRegressor(n_estimators=140, max_depth=5, learning_rate=0.2)
+# Final XG Boost Model
+
+xg_model = XGBRegressor(n_estimators=110, max_depth=7, learning_rate=0.1)
 xg_model.fit(X_train, y_train)
+
+# ## Deep Neural Network Model
 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Activation
