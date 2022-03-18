@@ -117,11 +117,11 @@ f_model_acc = [0, 0, 0]
 
 '''for i in n_est_params:
     for j in max_depth_params:
-        f_model = RandomForestRegressor(n_estimators=i, max_depth=j)
+        f_model = RandomForestRegressor(n_estimators=i, max_depth=j, bootstrap=True, oob_score=True)
         f_model.fit(X_train, y_train)
-        print(f_model.score(X_test, y_test))
-        if f_model.score(X_test, y_test) > f_model_acc[0]:
-            f_model_acc[0] = f_model.score(X_test, y_test)
+        print(f_model.oob_score_)
+        if f_model.oob_score_ > f_model_acc[0]:
+            f_model_acc[0] = f_model.oob_score_
             f_model_acc[1] = i
             f_model_acc[2] = j
 '''
@@ -130,7 +130,7 @@ f_model_acc = [0, 0, 0]
 #print("Highest acc:", f_model_acc[0], "with n_est:", f_model_acc[1], "and max_depth:", f_model_acc[2])
 # -
 
-forest_model = RandomForestRegressor(n_estimators=70, max_depth=10)
+forest_model = RandomForestRegressor(n_estimators=50, max_depth=11)
 forest_model.fit(X_train, y_train)
 
 n_est_params = [50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150]
@@ -248,3 +248,6 @@ print('MAE:', metrics.mean_absolute_error(y_test, y_pred_dnn))
 print('MSE:', metrics.mean_squared_error(y_test, y_pred_dnn))  
 print('RMSE:', np.sqrt(metrics.mean_squared_error(y_test, y_pred_dnn)))
 print('VarScore:',metrics.explained_variance_score(y_test,y_pred_dnn))
+# -
+
+
