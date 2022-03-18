@@ -35,16 +35,10 @@ train_df.info()
 
 train_df.loc[:, 'LotShape']
 
-train_df.columns
-
-train_df = train_df[train_df['GrLivArea'] < 4000]
-
 # ### SalePrice vs GrLivArea scatter plot
 
 data = pd.concat([train_df['SalePrice'], train_df['GrLivArea']], axis=1)
 data.plot.scatter(x='GrLivArea', y='SalePrice', ylim=(0,900000));
-
-
 
 # Positive correlation between SalePrice and livng area square footage
 
@@ -94,6 +88,10 @@ missing_data.head(25)
 train_df = train_df.drop((missing_data[missing_data['Total'] > 1]).index,1)
 train_df = train_df.drop(train_df.loc[train_df['Electrical'].isnull()].index)
 print("Number of missing data in dataframe:", train_df.isnull().sum().max())
+
+# Removing outliers in GrLivArea
+
+train_df = train_df[train_df['GrLivArea'] < 4000]
 
 # Remove ID Feature
 
@@ -176,7 +174,7 @@ x_model_acc = [0, 0, 0, 0]
 
 # Final XG Boost Model
 
-xg_model = XGBRegressor(n_estimators=110, max_depth=7, learning_rate=0.1)
+xg_model = XGBRegressor(n_estimators=120, max_depth=5, learning_rate=0.1)
 xg_model.fit(X_train, y_train)
 
 # ## Deep Neural Network Model
