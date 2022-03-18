@@ -84,6 +84,8 @@ plt.show()
 
 # ## Data Processing
 
+# Removing any features with missing data
+
 total = train_df.isnull().sum().sort_values(ascending=False)
 percent = (train_df.isnull().sum()/train_df.isnull().count()).sort_values(ascending=False)
 missing_data = pd.concat([total, percent], axis=1, keys=['Total', 'Percent'])
@@ -93,12 +95,19 @@ train_df = train_df.drop((missing_data[missing_data['Total'] > 1]).index,1)
 train_df = train_df.drop(train_df.loc[train_df['Electrical'].isnull()].index)
 print("Number of missing data in dataframe:", train_df.isnull().sum().max())
 
-# Removing features with missing data
+# Remove ID Feature
+
+train_df = train_df.drop('Id', axis = 1)
+
+# Convert categorical data to trainable parameters and remove duplicate data points
 
 train = pd.get_dummies(train_df)
 train = train.drop_duplicates()
 
-# Converting categorical data to numerical data
+# Preparing data for Model training
+
+y = train['SalePrice']
+x = train.drop('SalePrice', axis = 1)
 
 # ## Model Exploration
 
@@ -106,10 +115,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from xgboost import XGBRegressor
 from sklearn.model_selection import cross_val_score, KFold
-
-y = train['SalePrice']
-x = train.drop('SalePrice', axis = 1)
-x = train.drop('Id', axis = 1)
 
 X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=0)
 
@@ -138,7 +143,7 @@ f_model_acc = [0, 0, 0]
 
 # Final Random Forest Model
 
-forest_model = RandomForestRegressor(n_estimators=50, max_depth=11)
+forest_model = RandomForestRegressor(n_estimators=70, max_depth=14)
 forest_model.fit(X_train, y_train)
 
 # ### XG Boost Regressor Model
