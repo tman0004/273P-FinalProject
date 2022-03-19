@@ -192,21 +192,31 @@ model = Sequential()
 
 model = Sequential()
 model.add(Dense(100, input_dim=X_train.shape[1], activation='relu'))
-model.add(Dense(100, activation='relu'))
-model.add(Dense(100, activation='relu'))
-model.add(Dense(100, activation='relu'))
-model.add(Dense(100, activation='relu'))
-model.add(Dense(100, activation='relu'))
-model.add(Dense(100, activation='relu'))
+model.add(Dense(250, activation='relu'))
+model.add(Dense(250, activation='relu'))
+model.add(Dense(250, activation='relu'))
+model.add(Dense(250, activation='relu'))
+model.add(Dense(250, activation='relu'))
+model.add(Dense(250, activation='relu'))
+model.add(Dense(250, activation='relu'))
+model.add(Dense(250, activation='relu'))
+model.add(Dense(250, activation='relu'))
+
+model.add(Dense(250, activation='relu'))
+model.add(Dense(250, activation='relu'))
+model.add(Dense(250, activation='relu'))
+
+
 model.add(Dense(1))
+
 # Compile model
-model.compile(optimizer=Adam(learning_rate=0.001), loss = 'mse')
+model.compile(optimizer=Adam(learning_rate=0.01), loss = 'mse')
 # -
 
-early_stop = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=10)
+early_stop = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=100)
 history = model.fit(x=X_train,y=y_train,
           validation_split=0.1,
-          batch_size=128,epochs=400)
+          batch_size=64,epochs=1000, callbacks=[early_stop])
 
 
 losses = pd.DataFrame(model.history.history)

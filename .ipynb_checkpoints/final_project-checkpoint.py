@@ -12,6 +12,8 @@
 #     name: python3
 # ---
 
+# # House Price Prediction
+
 # ## Importing Libraries
 
 import matplotlib.pyplot as plt
@@ -82,6 +84,8 @@ plt.show()
 
 # ## Data Processing
 
+# Removing any features with missing data
+
 total = train_df.isnull().sum().sort_values(ascending=False)
 percent = (train_df.isnull().sum()/train_df.isnull().count()).sort_values(ascending=False)
 missing_data = pd.concat([total, percent], axis=1, keys=['Total', 'Percent'])
@@ -91,12 +95,19 @@ train_df = train_df.drop((missing_data[missing_data['Total'] > 1]).index,1)
 train_df = train_df.drop(train_df.loc[train_df['Electrical'].isnull()].index)
 print("Number of missing data in dataframe:", train_df.isnull().sum().max())
 
-# Removing features with missing data
+# Remove ID Feature
+
+train_df = train_df.drop('Id', axis = 1)
+
+# Convert categorical data to trainable parameters and remove duplicate data points
 
 train = pd.get_dummies(train_df)
 train = train.drop_duplicates()
 
-# Converting categorical data to numerical data
+# Preparing data for Model training
+
+y = train['SalePrice']
+x = train.drop('SalePrice', axis = 1)
 
 # ## Model Exploration
 
@@ -105,11 +116,11 @@ from sklearn.ensemble import RandomForestRegressor
 from xgboost import XGBRegressor
 from sklearn.model_selection import cross_val_score, KFold
 
-y = train['SalePrice']
-x = train.drop('SalePrice', axis = 1)
-x = train.drop('Id', axis = 1)
-
 X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=0)
+
+# ### Random Forest Regressor Model
+
+# Hyperparameter tuning
 
 n_est_params = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 max_depth_params = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
@@ -117,11 +128,11 @@ f_model_acc = [0, 0, 0]
 
 '''for i in n_est_params:
     for j in max_depth_params:
-        f_model = RandomForestRegressor(n_estimators=i, max_depth=j)
+        f_model = RandomForestRegressor(n_estimators=i, max_depth=j, bootstrap=True, oob_score=True)
         f_model.fit(X_train, y_train)
-        print(f_model.score(X_test, y_test))
-        if f_model.score(X_test, y_test) > f_model_acc[0]:
-            f_model_acc[0] = f_model.score(X_test, y_test)
+        print(f_model.oob_score_)
+        if f_model.oob_score_ > f_model_acc[0]:
+            f_model_acc[0] = f_model.oob_score_
             f_model_acc[1] = i
             f_model_acc[2] = j
 '''
@@ -130,18 +141,24 @@ f_model_acc = [0, 0, 0]
 #print("Highest acc:", f_model_acc[0], "with n_est:", f_model_acc[1], "and max_depth:", f_model_acc[2])
 # -
 
-forest_model = RandomForestRegressor(n_estimators=70, max_depth=10)
+# Final Random Forest Model
+
+forest_model = RandomForestRegressor(n_estimators=70, max_depth=14)
 forest_model.fit(X_train, y_train)
+
+# ### XG Boost Regressor Model
+
+# Hyperparameter tuning
 
 n_est_params = [50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150]
 max_depth_params = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-learning_rate = [0.0001, 0.001, 0.01, 0.1, 0.2, 0.3]
+learning_rate = [0.01, 0.1, 0.2, 0.3]
 x_model_acc = [0, 0, 0, 0]
 
 '''for i in n_est_params:
     for j in max_depth_params:
         for k in learning_rate:
-            x_model = XGBRegressor(n_estimators=i, max_depth=j)
+            x_model = XGBRegressor(n_estimators=i, max_depth=j, learning_rate=k)
             x_model.fit(X_train, y_train)
             kfold = KFold(n_splits=10, shuffle=True)
             kf_cv_scores = cross_val_score(x_model, X_train, y_train, cv=kfold)
@@ -157,8 +174,12 @@ x_model_acc = [0, 0, 0, 0]
 #print("Highest acc:", x_model_acc[0], "\nn_est:", x_model_acc[1], "\nmax_depth:", x_model_acc[2], "\nlearning rate:", x_model_acc[3])
 # -
 
-xg_model = XGBRegressor(n_estimators=140, max_depth=5, learning_rate=0.2)
+# Final XG Boost Model
+
+xg_model = XGBRegressor(n_estimators=110, max_depth=7, learning_rate=0.1)
 xg_model.fit(X_train, y_train)
+
+# ## Deep Neural Network Model
 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Activation
@@ -171,21 +192,31 @@ model = Sequential()
 
 model = Sequential()
 model.add(Dense(100, input_dim=X_train.shape[1], activation='relu'))
-model.add(Dense(100, activation='relu'))
-model.add(Dense(100, activation='relu'))
-model.add(Dense(100, activation='relu'))
-model.add(Dense(100, activation='relu'))
-model.add(Dense(100, activation='relu'))
-model.add(Dense(100, activation='relu'))
+model.add(Dense(250, activation='relu'))
+model.add(Dense(250, activation='relu'))
+model.add(Dense(250, activation='relu'))
+model.add(Dense(250, activation='relu'))
+model.add(Dense(250, activation='relu'))
+model.add(Dense(250, activation='relu'))
+model.add(Dense(250, activation='relu'))
+model.add(Dense(250, activation='relu'))
+model.add(Dense(250, activation='relu'))
+
+model.add(Dense(250, activation='relu'))
+model.add(Dense(250, activation='relu'))
+model.add(Dense(250, activation='relu'))
+
+
 model.add(Dense(1))
+
 # Compile model
-model.compile(optimizer=Adam(learning_rate=0.001), loss = 'mse')
+model.compile(optimizer=Adam(learning_rate=0.01), loss = 'mse')
 # -
 
-early_stop = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=10)
+early_stop = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=100)
 history = model.fit(x=X_train,y=y_train,
           validation_split=0.1,
-          batch_size=128,epochs=400)
+          batch_size=128,epochs=1000, callbacks=[early_stop])
 
 
 losses = pd.DataFrame(model.history.history)
@@ -248,3 +279,6 @@ print('MAE:', metrics.mean_absolute_error(y_test, y_pred_dnn))
 print('MSE:', metrics.mean_squared_error(y_test, y_pred_dnn))  
 print('RMSE:', np.sqrt(metrics.mean_squared_error(y_test, y_pred_dnn)))
 print('VarScore:',metrics.explained_variance_score(y_test,y_pred_dnn))
+# -
+
+
